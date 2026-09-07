@@ -1,25 +1,25 @@
---[[ 
-    DEATH NOTE - GUI
-    DRAG + ENTER + REMOTE EVENT
-]]
+-- Death Note draggable
+-- Mantiene tu sistema y hace DRAG tanto la portada como el libro.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
-local Remote = ReplicatedStorage:WaitForChild("DeathNoteEvent")
-
--- =========================================================
--- GUI
--- =========================================================
-
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local oldGui = PlayerGui:FindFirstChild("DeathNoteGui")
+local Remote = ReplicatedStorage:FindFirstChild("DeathNoteEvent")
 
+if not Remote then
+    Remote = Instance.new("RemoteEvent")
+    Remote.Name = "DeathNoteEvent"
+    Remote.Parent = ReplicatedStorage
+end
+
+-- LIMPIAR GUI ANTERIOR
+local oldGui = PlayerGui:FindFirstChild("DeathNoteGui")
 if oldGui then
-	oldGui:Destroy()
+    oldGui:Destroy()
 end
 
 local Gui = Instance.new("ScreenGui")
@@ -29,147 +29,120 @@ Gui.IgnoreGuiInset = true
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.Parent = PlayerGui
 
--- =========================================================
 -- PORTADA
--- =========================================================
-
 local Closed = Instance.new("Frame")
 Closed.Name = "ClosedCover"
-Closed.Size = UDim2.new(0, 180, 0, 240)
-Closed.Position = UDim2.new(0, 20, 0, 20)
-Closed.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+Closed.Size = UDim2.new(0,180,0,240)
+Closed.Position = UDim2.new(0,20,0,20)
+Closed.BackgroundColor3 = Color3.fromRGB(8,8,12)
 Closed.BorderSizePixel = 0
 Closed.Active = true
 Closed.Parent = Gui
 
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 6)
-Corner.Parent = Closed
+Instance.new("UICorner",Closed).CornerRadius = UDim.new(0,6)
 
 local Stroke = Instance.new("UIStroke")
-Stroke.Color = Color3.fromRGB(180, 160, 120)
+Stroke.Color = Color3.fromRGB(180,160,120)
 Stroke.Thickness = 2
-Stroke.Transparency = 0.2
 Stroke.Parent = Closed
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 1, 0)
+Title.Size = UDim2.new(1,0,1,0)
 Title.BackgroundTransparency = 1
 Title.Text = "Death Note"
-Title.TextColor3 = Color3.fromRGB(245, 240, 230)
+Title.TextColor3 = Color3.fromRGB(245,240,230)
 Title.Font = Enum.Font.Creepster
 Title.TextSize = 36
 Title.Parent = Closed
 
 local Hint = Instance.new("TextLabel")
-Hint.Size = UDim2.new(1, 0, 0, 20)
-Hint.Position = UDim2.new(0, 0, 1, -25)
+Hint.Size = UDim2.new(1,0,0,20)
+Hint.Position = UDim2.new(0,0,1,-25)
 Hint.BackgroundTransparency = 1
-Hint.Text = "Arrastra • Click para abrir"
-Hint.TextColor3 = Color3.fromRGB(140, 130, 110)
+Hint.Text = "Click para abrir"
+Hint.TextColor3 = Color3.fromRGB(140,130,110)
 Hint.Font = Enum.Font.Gotham
-Hint.TextSize = 11
+Hint.TextSize = 12
 Hint.Parent = Closed
 
--- =========================================================
--- LIBRO ABIERTO
--- =========================================================
+-- BOTÓN INVISIBLE
+local OpenButton = Instance.new("TextButton")
+OpenButton.Size = UDim2.new(1,0,1,0)
+OpenButton.BackgroundTransparency = 1
+OpenButton.Text = ""
+OpenButton.Parent = Closed
 
+-- LIBRO
 local Book = Instance.new("Frame")
 Book.Name = "OpenBook"
-Book.Size = UDim2.new(0, 400, 0, 280)
-Book.Position = Closed.Position
-Book.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+Book.Size = UDim2.new(0,400,0,280)
+Book.Position = UDim2.new(0,20,0,20)
+Book.BackgroundColor3 = Color3.fromRGB(8,8,12)
 Book.BorderSizePixel = 0
 Book.Active = true
 Book.Visible = false
 Book.Parent = Gui
 
-local BookCorner = Instance.new("UICorner")
-BookCorner.CornerRadius = UDim.new(0, 6)
-BookCorner.Parent = Book
+Instance.new("UICorner",Book).CornerRadius = UDim.new(0,6)
 
 local BookStroke = Instance.new("UIStroke")
-BookStroke.Color = Color3.fromRGB(180, 160, 120)
+BookStroke.Color = Color3.fromRGB(180,160,120)
 BookStroke.Thickness = 2
-BookStroke.Transparency = 0.2
 BookStroke.Parent = Book
 
--- =========================================================
--- TITULO
--- =========================================================
-
 local BookTitle = Instance.new("TextLabel")
-BookTitle.Size = UDim2.new(1, -40, 0, 30)
-BookTitle.Position = UDim2.new(0, 10, 0, 2)
+BookTitle.Size = UDim2.new(1,-40,0,30)
+BookTitle.Position = UDim2.new(0,10,0,2)
 BookTitle.BackgroundTransparency = 1
 BookTitle.Text = "Death Note"
-BookTitle.TextColor3 = Color3.fromRGB(245, 240, 230)
+BookTitle.TextColor3 = Color3.fromRGB(245,240,230)
 BookTitle.Font = Enum.Font.Creepster
 BookTitle.TextSize = 22
 BookTitle.Parent = Book
 
--- =========================================================
 -- CERRAR
--- =========================================================
-
 local Close = Instance.new("TextButton")
-Close.Name = "CloseButton"
-Close.Size = UDim2.new(0, 25, 0, 25)
-Close.Position = UDim2.new(1, -30, 0, 5)
-Close.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+Close.Size = UDim2.new(0,25,0,25)
+Close.Position = UDim2.new(1,-30,0,5)
+Close.BackgroundColor3 = Color3.fromRGB(20,20,25)
 Close.Text = "X"
-Close.TextColor3 = Color3.fromRGB(200, 80, 80)
+Close.TextColor3 = Color3.fromRGB(200,80,80)
 Close.Font = Enum.Font.GothamBold
 Close.TextSize = 14
 Close.BorderSizePixel = 0
 Close.Parent = Book
 
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(1, 0)
-CloseCorner.Parent = Close
+Instance.new("UICorner",Close).CornerRadius = UDim.new(1,0)
 
--- =========================================================
--- PAGINAS
--- =========================================================
-
+-- PÁGINAS
 local Pages = Instance.new("Frame")
-Pages.Size = UDim2.new(1, -20, 1, -45)
-Pages.Position = UDim2.new(0, 10, 0, 35)
+Pages.Size = UDim2.new(1,-20,1,-45)
+Pages.Position = UDim2.new(0,10,0,35)
 Pages.BackgroundTransparency = 1
 Pages.Parent = Book
 
--- =========================================================
--- PAGINA IZQUIERDA
--- =========================================================
-
+-- IZQUIERDA
 local Left = Instance.new("Frame")
-Left.Size = UDim2.new(0.5, -5, 1, 0)
-Left.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+Left.Size = UDim2.new(0.5,-5,1,0)
+Left.BackgroundColor3 = Color3.fromRGB(12,12,16)
 Left.BorderSizePixel = 0
 Left.Parent = Pages
 
-local LeftCorner = Instance.new("UICorner")
-LeftCorner.CornerRadius = UDim.new(0, 4)
-LeftCorner.Parent = Left
-
-local LeftStroke = Instance.new("UIStroke")
-LeftStroke.Color = Color3.fromRGB(60, 55, 45)
-LeftStroke.Parent = Left
+Instance.new("UICorner",Left).CornerRadius = UDim.new(0,4)
 
 local Index = Instance.new("TextLabel")
-Index.Size = UDim2.new(1, -10, 0, 25)
-Index.Position = UDim2.new(0, 5, 0, 5)
+Index.Size = UDim2.new(1,-10,0,25)
+Index.Position = UDim2.new(0,5,0,5)
 Index.BackgroundTransparency = 1
 Index.Text = "INSTRUCCIONES"
-Index.TextColor3 = Color3.fromRGB(200, 180, 140)
+Index.TextColor3 = Color3.fromRGB(200,180,140)
 Index.Font = Enum.Font.Creepster
 Index.TextSize = 16
 Index.Parent = Left
 
 local Instructions = Instance.new("TextLabel")
-Instructions.Size = UDim2.new(1, -16, 1, -40)
-Instructions.Position = UDim2.new(0, 8, 0, 35)
+Instructions.Size = UDim2.new(1,-16,1,-40)
+Instructions.Position = UDim2.new(0,8,0,35)
 Instructions.BackgroundTransparency = 1
 Instructions.Text = [[
 Escribe el nombre de un jugador.
@@ -179,7 +152,7 @@ Presiona ENTER.
 La Death Note enviará
 el nombre automáticamente.
 ]]
-Instructions.TextColor3 = Color3.fromRGB(170, 165, 150)
+Instructions.TextColor3 = Color3.fromRGB(170,165,150)
 Instructions.Font = Enum.Font.Gotham
 Instructions.TextSize = 11
 Instructions.TextWrapped = true
@@ -187,48 +160,35 @@ Instructions.TextXAlignment = Enum.TextXAlignment.Left
 Instructions.TextYAlignment = Enum.TextYAlignment.Top
 Instructions.Parent = Left
 
--- =========================================================
--- PAGINA DERECHA
--- =========================================================
-
+-- DERECHA
 local Right = Instance.new("Frame")
-Right.Size = UDim2.new(0.5, -5, 1, 0)
-Right.Position = UDim2.new(0.5, 5, 0, 0)
-Right.BackgroundColor3 = Color3.fromRGB(245, 240, 225)
+Right.Size = UDim2.new(0.5,-5,1,0)
+Right.Position = UDim2.new(0.5,5,0,0)
+Right.BackgroundColor3 = Color3.fromRGB(245,240,225)
 Right.BorderSizePixel = 0
 Right.Parent = Pages
 
-local RightCorner = Instance.new("UICorner")
-RightCorner.CornerRadius = UDim.new(0, 4)
-RightCorner.Parent = Right
-
-local RightStroke = Instance.new("UIStroke")
-RightStroke.Color = Color3.fromRGB(180, 160, 120)
-RightStroke.Parent = Right
+Instance.new("UICorner",Right).CornerRadius = UDim.new(0,4)
 
 local PageTitle = Instance.new("TextLabel")
-PageTitle.Size = UDim2.new(1, -10, 0, 25)
-PageTitle.Position = UDim2.new(0, 5, 0, 5)
+PageTitle.Size = UDim2.new(1,-10,0,25)
+PageTitle.Position = UDim2.new(0,5,0,5)
 PageTitle.BackgroundTransparency = 1
 PageTitle.Text = "Escribe un nombre"
-PageTitle.TextColor3 = Color3.fromRGB(40, 40, 40)
+PageTitle.TextColor3 = Color3.fromRGB(40,40,40)
 PageTitle.Font = Enum.Font.GothamBold
 PageTitle.TextSize = 13
 PageTitle.Parent = Right
 
--- =========================================================
 -- TEXTBOX
--- =========================================================
-
 local Input = Instance.new("TextBox")
-Input.Name = "NameInput"
-Input.Size = UDim2.new(1, -16, 0, 130)
-Input.Position = UDim2.new(0, 8, 0, 35)
-Input.BackgroundColor3 = Color3.fromRGB(245, 240, 225)
+Input.Size = UDim2.new(1,-16,0,130)
+Input.Position = UDim2.new(0,8,0,35)
+Input.BackgroundColor3 = Color3.fromRGB(245,240,225)
 Input.Text = ""
 Input.PlaceholderText = "Nombre del jugador..."
-Input.TextColor3 = Color3.fromRGB(30, 30, 30)
-Input.PlaceholderColor3 = Color3.fromRGB(150, 145, 130)
+Input.TextColor3 = Color3.fromRGB(30,30,30)
+Input.PlaceholderColor3 = Color3.fromRGB(150,145,130)
 Input.Font = Enum.Font.Gotham
 Input.TextSize = 13
 Input.TextWrapped = true
@@ -238,159 +198,108 @@ Input.ClearTextOnFocus = false
 Input.MultiLine = true
 Input.Parent = Right
 
-local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 4)
-InputCorner.Parent = Input
+Instance.new("UICorner",Input).CornerRadius = UDim.new(0,4)
 
 local InputStroke = Instance.new("UIStroke")
-InputStroke.Color = Color3.fromRGB(180, 160, 120)
+InputStroke.Color = Color3.fromRGB(180,160,120)
 InputStroke.Parent = Input
 
--- =========================================================
--- ESTADO
--- =========================================================
-
+-- STATUS
 local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, -10, 0, 25)
-Status.Position = UDim2.new(0, 5, 1, -30)
+Status.Size = UDim2.new(1,-10,0,25)
+Status.Position = UDim2.new(0,5,1,-30)
 Status.BackgroundTransparency = 1
 Status.Text = "Presiona ENTER"
-Status.TextColor3 = Color3.fromRGB(70, 70, 70)
+Status.TextColor3 = Color3.fromRGB(70,70,70)
 Status.Font = Enum.Font.Gotham
 Status.TextSize = 10
 Status.Parent = Right
 
+-- ABRIR
+OpenButton.MouseButton1Click:Connect(function()
+    Closed.Visible = false
+    Book.Visible = true
+end)
+
+-- CERRAR
+Close.MouseButton1Click:Connect(function()
+    Book.Visible = false
+    Closed.Visible = true
+end)
+
+-- ENTER
+Input.FocusLost:Connect(function(enterPressed)
+    if not enterPressed then return end
+
+    local name = Input.Text:gsub("^%s*(.-)%s*$","%1")
+
+    if name == "" then
+        Status.Text = "Escribe un nombre."
+        return
+    end
+
+    Status.Text = "Escribiendo..."
+
+    Remote:FireServer(name)
+
+    task.delay(0.3,function()
+        if Status and Status.Parent then
+            Status.Text = "Nombre escrito: "..name
+        end
+    end)
+end)
+
 -- =========================================================
--- BOTON DE APERTURA
+-- DRAG UNIVERSAL
+-- Puedes arrastrar la portada y el libro desde cualquier parte.
 -- =========================================================
 
-local OpenButton = Instance.new("TextButton")
-OpenButton.Size = UDim2.new(1, 0, 1, 0)
-OpenButton.BackgroundTransparency = 1
-OpenButton.Text = ""
-OpenButton.ZIndex = 10
-OpenButton.Parent = Closed
+local function makeDraggable(object)
 
--- =========================================================
--- DRAG
--- =========================================================
+    local dragging = false
+    local dragStart
+    local startPos
 
-local dragging = false
-local dragStart = nil
-local startPosition = nil
-local draggedObject = nil
+    object.InputBegan:Connect(function(input)
 
-local function beginDrag(object, input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
 
-	if input.UserInputType ~= Enum.UserInputType.MouseButton1
-		and input.UserInputType ~= Enum.UserInputType.Touch then
-		return
-	end
+            dragging = true
+            dragStart = input.Position
+            startPos = object.Position
 
-	dragging = true
-	dragStart = input.Position
-	startPosition = object.Position
-	draggedObject = object
+            input.Changed:Connect(function()
 
-	input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
 
-		if input.UserInputState == Enum.UserInputState.End then
-			dragging = false
-			draggedObject = nil
-		end
+            end)
+        end
+    end)
 
-	end)
+    UserInputService.InputChanged:Connect(function(input)
+
+        if not dragging then return end
+
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement
+        and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+
+        local delta = input.Position - dragStart
+
+        object.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end)
 end
 
-Closed.InputBegan:Connect(function(input)
-	beginDrag(Closed, input)
-end)
-
-OpenButton.InputBegan:Connect(function(input)
-	beginDrag(Closed, input)
-end)
-
-Book.InputBegan:Connect(function(input)
-	beginDrag(Book, input)
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-
-	if not dragging or not draggedObject then
-		return
-	end
-
-	if input.UserInputType ~= Enum.UserInputType.MouseMovement
-		and input.UserInputType ~= Enum.UserInputType.Touch then
-		return
-	end
-
-	local delta = input.Position - dragStart
-
-	draggedObject.Position = UDim2.new(
-		startPosition.X.Scale,
-		startPosition.X.Offset + delta.X,
-		startPosition.Y.Scale,
-		startPosition.Y.Offset + delta.Y
-	)
-
-end)
-
--- =========================================================
--- ABRIR
--- =========================================================
-
-OpenButton.MouseButton1Click:Connect(function()
-
-	Book.Position = Closed.Position
-
-	Closed.Visible = false
-	Book.Visible = true
-
-end)
-
--- =========================================================
--- CERRAR
--- =========================================================
-
-Close.MouseButton1Click:Connect(function()
-
-	Closed.Position = Book.Position
-
-	Book.Visible = false
-	Closed.Visible = true
-
-end)
-
--- =========================================================
--- ENTER
--- =========================================================
-
-Input.FocusLost:Connect(function(enterPressed)
-
-	if not enterPressed then
-		return
-	end
-
-	local name = Input.Text:gsub("^%s*(.-)%s*$", "%1")
-
-	if name == "" then
-		Status.Text = "Escribe un nombre."
-		return
-	end
-
-	Status.Text = "Escribiendo..."
-
-	Remote:FireServer(name)
-
-	task.delay(0.3, function()
-
-		if Status and Status.Parent then
-			Status.Text = "Nombre escrito: " .. name
-		end
-
-	end)
-
-end)
+makeDraggable(Closed)
+makeDraggable(Book)
 
 print("Death Note cargada correctamente.")
