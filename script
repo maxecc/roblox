@@ -1,6 +1,6 @@
---[[
-    DEATH NOTE - TODO EN UNO
-    GUI + ENTER + REMOTE EVENT + FLING + DRAG
+--[[ 
+    DEATH NOTE - GUI
+    DRAG + ENTER + REMOTE EVENT
 ]]
 
 local Players = game:GetService("Players")
@@ -8,79 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
-
--- =========================================================
--- REMOTE EVENT
--- =========================================================
-
-local Remote = ReplicatedStorage:FindFirstChild("DeathNoteEvent")
-
-if not Remote then
-    Remote = Instance.new("RemoteEvent")
-    Remote.Name = "DeathNoteEvent"
-    Remote.Parent = ReplicatedStorage
-end
-
--- =========================================================
--- PARTE SERVIDOR
--- =========================================================
-
-local function findPlayer(name)
-    if typeof(name) ~= "string" then
-        return nil
-    end
-
-    name = name:lower():gsub("^%s*(.-)%s*$", "%1")
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.Name:lower() == name
-            or player.DisplayName:lower() == name then
-            return player
-        end
-    end
-
-    return nil
-end
-
-local function fling(character)
-    if not character then
-        return
-    end
-
-    local root = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-
-    if not root or not humanoid then
-        return
-    end
-
-    if humanoid.Health <= 0 then
-        return
-    end
-
-    root.AssemblyLinearVelocity = Vector3.new(
-        math.random(-50, 50),
-        math.random(150, 250),
-        math.random(-50, 50)
-    )
-
-    root.AssemblyAngularVelocity = Vector3.new(
-        math.random(-30, 30),
-        math.random(-30, 30),
-        math.random(-30, 30)
-    )
-
-    humanoid.PlatformStand = true
-
-    task.delay(2, function()
-        if humanoid
-            and humanoid.Parent
-            and humanoid.Health > 0 then
-
-            humanoid.PlatformStand = false
-        end
-    end)
-end
+local Remote = ReplicatedStorage:WaitForChild("DeathNoteEvent")
 
 -- =========================================================
 -- GUI
@@ -91,7 +19,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local oldGui = PlayerGui:FindFirstChild("DeathNoteGui")
 
 if oldGui then
-    oldGui:Destroy()
+	oldGui:Destroy()
 end
 
 local Gui = Instance.new("ScreenGui")
@@ -319,7 +247,7 @@ InputStroke.Color = Color3.fromRGB(180, 160, 120)
 InputStroke.Parent = Input
 
 -- =========================================================
--- MENSAJE DE ESTADO
+-- ESTADO
 -- =========================================================
 
 local Status = Instance.new("TextLabel")
@@ -333,85 +261,78 @@ Status.TextSize = 10
 Status.Parent = Right
 
 -- =========================================================
--- BOTON INVISIBLE DE APERTURA
+-- BOTON DE APERTURA
 -- =========================================================
 
 local OpenButton = Instance.new("TextButton")
 OpenButton.Size = UDim2.new(1, 0, 1, 0)
 OpenButton.BackgroundTransparency = 1
 OpenButton.Text = ""
+OpenButton.ZIndex = 10
 OpenButton.Parent = Closed
 
 -- =========================================================
--- DRAG GENERAL
+-- DRAG
 -- =========================================================
 
 local dragging = false
 local dragStart = nil
 local startPosition = nil
 local draggedObject = nil
-local moved = false
 
 local function beginDrag(object, input)
 
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-        and input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
+	if input.UserInputType ~= Enum.UserInputType.MouseButton1
+		and input.UserInputType ~= Enum.UserInputType.Touch then
+		return
+	end
 
-    dragging = true
-    moved = false
-    draggedObject = object
-    dragStart = input.Position
-    startPosition = object.Position
+	dragging = true
+	dragStart = input.Position
+	startPosition = object.Position
+	draggedObject = object
 
-    input.Changed:Connect(function()
+	input.Changed:Connect(function()
 
-        if input.UserInputState == Enum.UserInputState.End then
-            dragging = false
-            draggedObject = nil
-        end
+		if input.UserInputState == Enum.UserInputState.End then
+			dragging = false
+			draggedObject = nil
+		end
 
-    end)
+	end)
 end
 
--- PORTADA DRAGGABLE
 Closed.InputBegan:Connect(function(input)
-    beginDrag(Closed, input)
+	beginDrag(Closed, input)
 end)
 
 OpenButton.InputBegan:Connect(function(input)
-    beginDrag(Closed, input)
+	beginDrag(Closed, input)
 end)
 
--- LIBRO DRAGGABLE
 Book.InputBegan:Connect(function(input)
-    beginDrag(Book, input)
+	beginDrag(Book, input)
 end)
 
 UserInputService.InputChanged:Connect(function(input)
 
-    if not dragging or not draggedObject then
-        return
-    end
+	if not dragging or not draggedObject then
+		return
+	end
 
-    if input.UserInputType ~= Enum.UserInputType.MouseMovement
-        and input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
+	if input.UserInputType ~= Enum.UserInputType.MouseMovement
+		and input.UserInputType ~= Enum.UserInputType.Touch then
+		return
+	end
 
-    local delta = input.Position - dragStart
+	local delta = input.Position - dragStart
 
-    if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then
-        moved = true
-    end
-
-    draggedObject.Position = UDim2.new(
-        startPosition.X.Scale,
-        startPosition.X.Offset + delta.X,
-        startPosition.Y.Scale,
-        startPosition.Y.Offset + delta.Y
-    )
+	draggedObject.Position = UDim2.new(
+		startPosition.X.Scale,
+		startPosition.X.Offset + delta.X,
+		startPosition.Y.Scale,
+		startPosition.Y.Offset + delta.Y
+	)
 
 end)
 
@@ -421,11 +342,10 @@ end)
 
 OpenButton.MouseButton1Click:Connect(function()
 
-    -- El libro aparece donde estaba la portada
-    Book.Position = Closed.Position
+	Book.Position = Closed.Position
 
-    Closed.Visible = false
-    Book.Visible = true
+	Closed.Visible = false
+	Book.Visible = true
 
 end)
 
@@ -435,11 +355,10 @@ end)
 
 Close.MouseButton1Click:Connect(function()
 
-    -- Guardar la posición actual del libro
-    Closed.Position = Book.Position
+	Closed.Position = Book.Position
 
-    Book.Visible = false
-    Closed.Visible = true
+	Book.Visible = false
+	Closed.Visible = true
 
 end)
 
@@ -449,36 +368,29 @@ end)
 
 Input.FocusLost:Connect(function(enterPressed)
 
-    if not enterPressed then
-        return
-    end
+	if not enterPressed then
+		return
+	end
 
-    local name = Input.Text
-        :gsub("^%s*(.-)%s*$", "%1")
+	local name = Input.Text:gsub("^%s*(.-)%s*$", "%1")
 
-    if name == "" then
-        Status.Text = "Escribe un nombre."
-        return
-    end
+	if name == "" then
+		Status.Text = "Escribe un nombre."
+		return
+	end
 
-    Status.Text = "Escribiendo..."
+	Status.Text = "Escribiendo..."
 
-    Remote:FireServer(name)
+	Remote:FireServer(name)
 
-    task.delay(0.3, function()
+	task.delay(0.3, function()
 
-        if Status and Status.Parent then
-            Status.Text = "Nombre escrito: " .. name
-        end
+		if Status and Status.Parent then
+			Status.Text = "Nombre escrito: " .. name
+		end
 
-    end)
+	end)
 
 end)
 
--- =========================================================
--- MENSAJE FINAL
--- =========================================================
-
-print("Death Note cargada.")
-print("Puedes arrastrarla antes y después de abrirla.")
-print("Escribe un jugador y presiona ENTER.")
+print("Death Note cargada correctamente.")
