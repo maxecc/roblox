@@ -1,1 +1,190 @@
-print (hi)
+--[[
+	DEATH NOTE - Loadstring (Servidor)
+	Crea: RemoteEvent, GUI completa, y maneja el fling
+	El LocalScript (DeathNoteClient) debe estar en StarterGui
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+
+-- ========================================================
+-- 1. REMOTE EVENT
+-- ========================================================
+local function createRemoteEvent()
+	local existing = ReplicatedStorage:FindFirstChild("DeathNoteEvent")
+	if existing then existing:Destroy() end
+	local event = Instance.new("RemoteEvent")
+	event.Name = "DeathNoteEvent"
+	event.Parent = ReplicatedStorage
+	return event
+end
+
+-- ========================================================
+-- 2. GUI
+-- ========================================================
+local function createGUI()
+	local existing = StarterGui:FindFirstChild("DeathNoteGui")
+	if existing then existing:Destroy() end
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "DeathNoteGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.IgnoreGuiInset = true
+	screenGui.Parent = StarterGui
+
+	-- PORTADA CERRADA
+	local closedCover = Instance.new("Frame")
+	closedCover.Name = "ClosedCover"
+	closedCover.Size = UDim2.new(0, 180, 0, 240)
+	closedCover.Position = UDim2.new(0, 20, 0, 20)
+	closedCover.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+	closedCover.BorderSizePixel = 0
+	closedCover.Active = true
+	closedCover.Parent = screenGui
+
+	local cc = Instance.new("UICorner") cc.CornerRadius = UDim.new(0, 6) cc.Parent = closedCover
+	local cs = Instance.new("UIStroke") cs.Color = Color3.fromRGB(180, 160, 120) cs.Thickness = 2 cs.Transparency = 0.2 cs.Parent = closedCover
+
+	local ct = Instance.new("TextLabel")
+	ct.Name = "Title" ct.Size = UDim2.new(1, 0, 1, 0) ct.BackgroundTransparency = 1
+	ct.Text = "Death Note" ct.TextColor3 = Color3.fromRGB(245, 240, 230)
+	ct.Font = Enum.Font.Creepster ct.TextSize = 36 ct.Parent = closedCover
+
+	local oh = Instance.new("TextLabel")
+	oh.Name = "OpenHint" oh.Size = UDim2.new(1, 0, 0, 20) oh.Position = UDim2.new(0, 0, 1, -25)
+	oh.BackgroundTransparency = 1 oh.Text = "Click para abrir"
+	oh.TextColor3 = Color3.fromRGB(140, 130, 110) oh.Font = Enum.Font.Gotham oh.TextSize = 12 oh.Parent = closedCover
+
+	-- LIBRO ABIERTO
+	local openBook = Instance.new("Frame")
+	openBook.Name = "OpenBook" openBook.Size = UDim2.new(0, 180, 0, 240)
+	openBook.Position = UDim2.new(0, 20, 0, 20)
+	openBook.BackgroundColor3 = Color3.fromRGB(8, 8, 12) openBook.BorderSizePixel = 0
+	openBook.Active = true openBook.Visible = false openBook.Parent = screenGui
+
+	local oc = Instance.new("UICorner") oc.CornerRadius = UDim.new(0, 6) oc.Parent = openBook
+	local os = Instance.new("UIStroke") os.Color = Color3.fromRGB(180, 160, 120) os.Thickness = 2 os.Transparency = 0.2 os.Parent = openBook
+
+	local pages = Instance.new("Frame")
+	pages.Name = "Pages" pages.Size = UDim2.new(1, -10, 1, -30) pages.Position = UDim2.new(0, 5, 0, 25)
+	pages.BackgroundTransparency = 1 pages.Parent = openBook
+
+	-- Pagina izquierda: INDICE
+	local leftPage = Instance.new("Frame")
+	leftPage.Name = "IndexPage" leftPage.Size = UDim2.new(0.5, -5, 1, 0)
+	leftPage.BackgroundColor3 = Color3.fromRGB(12, 12, 16) leftPage.BorderSizePixel = 0 leftPage.Parent = pages
+
+	local lc = Instance.new("UICorner") lc.CornerRadius = UDim.new(0, 4) lc.Parent = leftPage
+	local ls = Instance.new("UIStroke") ls.Color = Color3.fromRGB(60, 55, 45) ls.Thickness = 1 ls.Parent = leftPage
+
+	local lp = Instance.new("UIPadding") lp.PaddingTop = UDim.new(0, 8) lp.PaddingBottom = UDim.new(0, 8)
+	lp.PaddingLeft = UDim.new(0, 6) lp.PaddingRight = UDim.new(0, 6) lp.Parent = leftPage
+
+	local it = Instance.new("TextLabel")
+	it.Name = "IndexTitle" it.Size = UDim2.new(1, 0, 0, 18) it.BackgroundTransparency = 1
+	it.Text = "INDICE" it.TextColor3 = Color3.fromRGB(200, 180, 140)
+	it.Font = Enum.Font.Creepster it.TextSize = 14 it.Parent = leftPage
+
+	local ins = Instance.new("TextLabel")
+	ins.Name = "Instructions" ins.Size = UDim2.new(1, 0, 1, -25) ins.Position = UDim2.new(0, 0, 0, 22)
+	ins.BackgroundTransparency = 1
+	ins.Text = "Como usar el Death Note:\n\n1. Escribe el nombre.\n\n2. Visualiza su rostro.\n\n3. Morira en 40 seg.\n\n4. Especifica causa o\n   sera al corazon.\n\n5. Escribe en la hoja\n   blanca."
+	ins.TextColor3 = Color3.fromRGB(170, 165, 150) ins.Font = Enum.Font.Gotham ins.TextSize = 8
+	ins.TextWrapped = true ins.TextXAlignment = Enum.TextXAlignment.Left ins.TextYAlignment = Enum.TextYAlignment.Top ins.Parent = leftPage
+
+	-- Pagina derecha: HOJA BLANCA
+	local rightPage = Instance.new("Frame")
+	rightPage.Name = "WritingPage" rightPage.Size = UDim2.new(0.5, -5, 1, 0)
+	rightPage.Position = UDim2.new(0.5, 10, 0, 0)
+	rightPage.BackgroundColor3 = Color3.fromRGB(245, 240, 225) rightPage.BorderSizePixel = 0 rightPage.Parent = pages
+
+	local rc = Instance.new("UICorner") rc.CornerRadius = UDim.new(0, 4) rc.Parent = rightPage
+	local rs2 = Instance.new("UIStroke") rs2.Color = Color3.fromRGB(180, 160, 120) rs2.Thickness = 1 rs2.Parent = rightPage
+
+	local tb = Instance.new("TextBox")
+	tb.Name = "NameInput" tb.Size = UDim2.new(1, -10, 1, -35) tb.Position = UDim2.new(0, 5, 0, 5)
+	tb.BackgroundColor3 = Color3.fromRGB(245, 240, 225) tb.BackgroundTransparency = 0.5
+	tb.Text = "" tb.PlaceholderText = "Escribe el nombre..."
+	tb.TextColor3 = Color3.fromRGB(30, 30, 30) tb.PlaceholderColor3 = Color3.fromRGB(150, 145, 130)
+	tb.Font = Enum.Font.Gotham tb.TextSize = 10 tb.TextWrapped = true
+	tb.TextXAlignment = Enum.TextXAlignment.Left tb.TextYAlignment = Enum.TextYAlignment.Top
+	tb.ClearTextOnFocus = false tb.MultiLine = true tb.Parent = rightPage
+
+	local tbc = Instance.new("UICorner") tbc.CornerRadius = UDim.new(0, 4) tbc.Parent = tb
+	local tbs = Instance.new("UIStroke") tbs.Color = Color3.fromRGB(180, 160, 120) tbs.Thickness = 1 tbs.Parent = tb
+
+	local wb = Instance.new("TextButton")
+	wb.Name = "WriteButton" wb.Size = UDim2.new(0, 70, 0, 18) wb.Position = UDim2.new(0.5, -35, 1, -22)
+	wb.BackgroundColor3 = Color3.fromRGB(20, 20, 25) wb.Text = "Escribir"
+	wb.TextColor3 = Color3.fromRGB(220, 210, 190) wb.Font = Enum.Font.Creepster wb.TextSize = 12 wb.BorderSizePixel = 0 wb.Parent = rightPage
+
+	local wbc = Instance.new("UICorner") wbc.CornerRadius = UDim.new(0, 4) wbc.Parent = wb
+	local wbs = Instance.new("UIStroke") wbs.Color = Color3.fromRGB(180, 160, 120) wbs.Thickness = 1 wbs.Parent = wb
+
+	-- Titulo libro abierto
+	local ot = Instance.new("TextLabel")
+	ot.Name = "OpenTitle" ot.Size = UDim2.new(1, 0, 0, 25) ot.Position = UDim2.new(0, 0, 0, 2)
+	ot.BackgroundTransparency = 1 ot.Text = "Death Note" ot.TextColor3 = Color3.fromRGB(245, 240, 230)
+	ot.Font = Enum.Font.Creepster ot.TextSize = 18 ot.Parent = openBook
+
+	-- Boton cerrar
+	local cl = Instance.new("TextButton")
+	cl.Name = "CloseButton" cl.Size = UDim2.new(0, 20, 0, 20) cl.Position = UDim2.new(1, -22, 0, 4)
+	cl.BackgroundColor3 = Color3.fromRGB(20, 20, 25) cl.Text = "X" cl.TextColor3 = Color3.fromRGB(200, 80, 80)
+	cl.Font = Enum.Font.GothamBold cl.TextSize = 12 cl.BorderSizePixel = 0 cl.Parent = openBook
+
+	local clc = Instance.new("UICorner") clc.CornerRadius = UDim.new(1, 0) clc.Parent = cl
+
+	return screenGui
+end
+
+-- ========================================================
+-- 3. FLING
+-- ========================================================
+local function flingCharacter(character)
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not hrp or not humanoid or humanoid.Health <= 0 then return end
+
+	hrp.AssemblyLinearVelocity = Vector3.new(
+		math.random(-50, 50), math.random(150, 250), math.random(-50, 50)
+	)
+	hrp.AssemblyAngularVelocity = Vector3.new(
+		math.random(-30, 30), math.random(-30, 30), math.random(-30, 30)
+	)
+	humanoid.PlatformStand = true
+	task.delay(2, function()
+		if humanoid and humanoid.Health > 0 then
+			humanoid.PlatformStand = false
+		end
+	end)
+end
+
+local function findPlayerByName(name)
+	name = string.lower(name)
+	for _, player in Players:GetPlayers() do
+		if string.lower(player.Name) == name or string.lower(player.DisplayName) == name then
+			return player
+		end
+	end
+	return nil
+end
+
+-- ========================================================
+-- 4. INICIALIZAR
+-- ========================================================
+local remoteEvent = createRemoteEvent()
+createGUI()
+
+remoteEvent.OnServerEvent:Connect(function(player, targetName)
+	if not targetName or targetName == "" then return end
+	local targetPlayer = findPlayerByName(targetName)
+	if not targetPlayer then return end
+	local character = targetPlayer.Character
+	if character then
+		flingCharacter(character)
+	end
+end)
+
+print("Death Note cargado correctamente.")
