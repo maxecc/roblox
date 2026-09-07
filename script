@@ -1,6 +1,6 @@
 --[[
     DEATH NOTE - TODO EN UNO
-    GUI + ENTER + REMOTE EVENT + FLING + DRAGGABLE
+    GUI + ENTER + REMOTE EVENT + FLING
 
     Escribe el nombre y presiona ENTER.
 ]]
@@ -387,7 +387,7 @@ Input.FocusLost:Connect(function(enterPressed)
 end)
 
 -- =========================================================
--- ARRASTRAR LIBRETA (solo si está abierta)
+-- ARRASTRAR LIBRETA
 -- =========================================================
 
 local UserInputService = game:GetService("UserInputService")
@@ -398,12 +398,7 @@ local startPosition
 
 Book.InputBegan:Connect(function(input)
 
-    if not Book.Visible then
-        return
-    end
-
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
 
         dragging = true
         dragStart = input.Position
@@ -423,13 +418,11 @@ end)
 
 UserInputService.InputChanged:Connect(function(input)
 
-    if not dragging or not Book.Visible then
-        dragging = false
+    if not dragging then
         return
     end
 
-    if input.UserInputType ~= Enum.UserInputType.MouseMovement
-        and input.UserInputType ~= Enum.UserInputType.Touch then
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement then
         return
     end
 
